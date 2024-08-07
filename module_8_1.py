@@ -1,7 +1,7 @@
 def add_everything_up(a, b):
     try:
         if a != b:
-           return a + b
+         return str(a) + str(b)
     except TypeError:
         print(f'Не верный тип данных!')
 print(add_everything_up(123.456, 'строка'))
