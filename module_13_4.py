@@ -3,7 +3,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
-api = '7157374333:AAH4b9SXGWEEGTocLoR65jOnTIDwg4yi7kY'
+api = ''
 bot = Bot(token = api)
 dp = Dispatcher(bot, storge= MemoryStorage())
 
