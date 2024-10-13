@@ -1,30 +1,50 @@
-from aiogram import Bot, Dispatcher, types
-from aiogram.utils import executor
+from aiogram import Bot, Dispatcher, executor, types
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from humanfriendly.terminal import message
 
+api = ''
+bot = Bot(token = api)
+dp = Dispatcher(bot, storage=MemoryStorage())
 
-bot = Bot(token='')
-dp = Dispatcher(bot)
+class UserState(StatesGroup):
+    age = State()
+    growth = State()
+    weight = State()
 
-keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-keyboard.add(types.KeyboardButton('Рассчитать'))
-keyboard.add(types.KeyboardButton('Информация'))
+@dp.message_hendler(commands=['start'])
+async def start_message(message):
+    kd = ReplyKeyboardMarkup(resize_keyboard=True)
+    kd.add(types.KeyboardButton('Рассчитать'))
+    kd.add(types.KeyboardButton('Информация'))
+    await message.answer('Привет!\nЯ бот помогаюший твоему здоровию!', reply_markup=keyboard)
 
+@dp.message_hendler(text=['Рассчитать'])
+async def set_age(message):
+    await message.answer('Введите свой возраст:')
+    await UserState.age.set()
 
-@dp.message_handler(commands=['start'])
-async def start(message: types.Message):
-    await message.answer('Привет! Я бот, который поможет тебе рассчитать рост и вес твоего ребенка.', reply_markup=keyboard)
+@dp.message_hendler(state=UserState.age)
+async def set_growth(message, state):
+    await state.update_data(age=message.text)
+    await message.answer('Введите свой рост:')
+    await UserState.growth.set()
 
-@dp.message_handler(text='Рассчитать')
-async def set_age(message: types.Message):
-    await message.answer('Введите возраст ребенка в годах:')
-    await message.answer('Введите рост ребенка в сантиметрах:')
-    await message.answer('Введите вес ребенка в килограммах:')
+@dp.message_hendler(state=UserState.growth)
+async def set_weight(message, state):
+    await state.update_data(growth=message.text)
+    await message.answer('Введите свой вес:')
+    await UserState.weight.set()
 
-@dp.message_handler(text='Информация')
-async def info(message: types.Message):
-    await message.answer('Информация о боте')
+@dp.message_hendler(state=UserState.weight)
+async def send_calories(message, state):
+    await state.update_data(weight=message.text)
+    data = await state.get_data()
+    calories = 10 * int(data['weight']) + 6.25 * int(data['growth']) - 5 * int(data['age']) + 5
+    await message.answer(f'Ваша норма калорий {calories}')
+    await state.finish()
 
-
-if __name__ == '__main__':
+if __name__ == "__mane__":
     executor.start_polling(dp, skip_updates=True)
 
